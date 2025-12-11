@@ -1,0 +1,3 @@
+data_batch_ini contains initial dataset to train the model.
+batch_to_run records the input parameters the model wants you to run. The number i in batch_{i} indicates the round of training.
+data_batch_{i} stores the data for the i-th round. 
