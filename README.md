@@ -48,5 +48,12 @@ Most utility functions called in `main.py` are defined in `utils.py`.
 
 A document explaining the underlying principles of Gaussian Process Regression may be added later as **GPR Explained** at the repository root.
 
+
+## Version Description
+
+# V1.01
+The initial github version. I was able to run the code locally, but the restructuring may mess the module importing in the main code. I have tested the model with an initial data batch (included in data/data_ml/data_batch_ini). It seemed to work (but with one data batch there is no way for the model to converge, so additional test is needed). To start the training, run main.py in src/scripts/. 
+Todo: test whether the restructured code works; train the model with several data batches to see if it converges; add instructions and results. 
+
 ---
 
