@@ -1,4 +1,4 @@
-from utils import *
+from src.mcf_data_lab.utils import *
 
 if __name__ == "__main__":
     ##########################################
