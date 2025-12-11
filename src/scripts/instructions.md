@@ -14,11 +14,11 @@ If you want to use my data, you do **not** need to run any simulations. In that 
 
 You will see a prompt like this:
 
----
+-
 → Saved next batch to: ./data/data_ml/batch_to_run/batch_1.txt
 Please run the simulation for this batch and place results in ./data/data_ml/data_batch_1.
 Type 'continue' to continue once the simulation is finished and data is ready, or 'exit' to quit:
----
+-
 
 
 If you see this prompt, type `continue` (without quotes).  
