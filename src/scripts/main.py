@@ -1,4 +1,17 @@
-from src.mcf_data_lab.utils import *
+import sys
+import os
+# Add src directory to sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from mcf_data_lab.utils import *  # noqa: F403
+
+# To run, ensure your terminal is currently in the mcf-data-lab-and-gpr directory which contains /src and /data directories
+# Alternatively, modify the paths in the code
+
+# If you want to exit the loop at any time, you can type 'exit' when prompted, even if you only feed the initial batch,
+# Exiting the loop will still allow you to extract the maximum predicted triple product from the current GPR model.
+
+# The code currently has no visualisation. Sad :(
 
 if __name__ == "__main__":
     ##########################################
@@ -7,7 +20,7 @@ if __name__ == "__main__":
     ##########################################
     # 1. Load initial batch
     ##########################################
-    data = read_simulation_folder('./data_ml/data_batch_ini')
+    data = read_simulation_folder('./data/data_ml/data_batch_ini')
     X_train = data['X']
     Y_train = data['triple']
     sigma_n = data['triple_err']
@@ -39,7 +52,7 @@ if __name__ == "__main__":
 
         # 3. Save next batch, hyperparameters, and Y scaling info
         # Modify these if you don't want to save to these paths or save as files
-        savefile = f"./data_ml/batch_to_run/batch_{round_idx}.txt"
+        savefile = f"./data/data_ml/batch_to_run/batch_{round_idx}.txt"
         np.savetxt(savefile, X_next)
         print(f"→ Saved next batch to: {savefile}")
 
@@ -65,7 +78,7 @@ if __name__ == "__main__":
 
         # -------------------------------------------------------
         # 4. Wait for simulations to finish externally
-        new_folder = f"./data_ml/data_batch_{round_idx}"
+        new_folder = f"./data/data_ml/data_batch_{round_idx}"
         print(f"Please run the simulation for this batch and place results in {new_folder}.")
         j=True
         while j:
@@ -116,8 +129,12 @@ if __name__ == "__main__":
     print(f"Predicted mean triple product: {mu_best:.3e}")
     print(f"Predicted uncertainty: {sigma_best:.3e}")
     print("==============================")
-    print(Y_mean, Y_std)
-    print(mu_best_scaled, sigma_best_scaled)
+    
+    # You may want to use hyperparams_record to extract the recorded hyperparameters every round. 
+    print(hyperparams_record)
 
-    print(lengthscales)
-    print(sigma_f)
+    # To check saved records, uncomment below
+    #print(Y_mean, Y_std)
+    #print(mu_best_scaled, sigma_best_scaled)
+    #print(lengthscales)
+    #print(sigma_f)
