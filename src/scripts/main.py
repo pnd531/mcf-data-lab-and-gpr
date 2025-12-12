@@ -25,7 +25,7 @@ if __name__ == "__main__":
     Y_train = data['triple']
     sigma_n = data['triple_err']
     
-
+    print(Y_train)
     # ---------------------------------------
     # Bayesian optimisation settings
     # ---------------------------------------
@@ -53,6 +53,9 @@ if __name__ == "__main__":
         # 3. Save next batch, hyperparameters, and Y scaling info
         # Modify these if you don't want to save to these paths or save as files
         savefile = f"./data/data_ml/batch_to_run/batch_{round_idx}.txt"
+        # Round continuous parameters to 4 decimals
+        X_next = np.round(X_next, 4)
+        
         np.savetxt(savefile, X_next)
         print(f"→ Saved next batch to: {savefile}")
 
@@ -118,7 +121,7 @@ if __name__ == "__main__":
     # 7. Extract the maximum predicted triple product
     # ----------------------------- 
     x_best, mu_best_scaled, sigma_best_scaled = extract_maximum(
-        scale_X(X_train), scale_Y(Y_train, sigma_n)[0], lengthscales, sigma_f, scale_Y(Y_train,sigma_n)[1], n_candidates=10000
+        scale_X(X_train), scale_Y(Y_train, sigma_n)[0], lengthscales, sigma_f, scale_Y(Y_train,sigma_n)[1], n_candidates=5000
         )
     # Descale predicted mean and uncertainty
     mu_best = descale_Y(mu_best_scaled, Y_mean, Y_std)
@@ -131,7 +134,7 @@ if __name__ == "__main__":
     print("==============================")
     
     # You may want to use hyperparams_record to extract the recorded hyperparameters every round. 
-    print(hyperparams_record)
+    #print(hyperparams_record)
 
     # To check saved records, uncomment below
     #print(Y_mean, Y_std)
