@@ -12,10 +12,11 @@ if __name__ == "__main__":
     ##########################################
     # 1. Load initial batch
     ##########################################
-    data = read_simulation_folder('./data/data_ml/data_batch_3',t_start=56, t_end=101)
+    data = read_simulation_folder('./data/test_data',t_start=56, t_end=101)
     X_train = data['X']
     Y_train = data['triple']
     sigma_n = data['triple_err']
 
     print("The triple products is", Y_train)
     print("X is", X_train)
+    print("The error is", sigma_n)

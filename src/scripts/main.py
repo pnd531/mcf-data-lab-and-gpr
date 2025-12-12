@@ -21,11 +21,12 @@ if __name__ == "__main__":
     # 1. Load initial batch
     ##########################################
     data = read_simulation_folder('./data/data_ml/data_batch_ini', t_start=55, t_end=100)
+    data = read_simulation_folder('./data/data_ml/backup_ini', t_start=55, t_end=100)
     X_train = data['X']
     Y_train = data['triple']
     sigma_n = data['triple_err']
     
-    print("The triple products of initial batch:",Y_train)
+    #print("The triple products of initial batch:",Y_train)
     # ---------------------------------------
     # Bayesian optimisation settings
     # ---------------------------------------
@@ -122,8 +123,10 @@ if __name__ == "__main__":
     ##########################################  
     # 7. Extract the maximum predicted triple product
     # ----------------------------- 
+    scaled_Y, scaled_sigma = scale_Y(Y_train, sigma_n)[0], scale_Y(Y_train, sigma_n)[1]
+
     x_best, mu_best_scaled, sigma_best_scaled = extract_maximum(
-       scale_X(X_train), scale_Y(Y_train, sigma_n)[0], lengthscales, sigma_f, scale_Y(Y_train,sigma_n)[1], n_candidates=10000
+       scale_X(X_train), scaled_Y, lengthscales, sigma_f, scaled_sigma, n_candidates=10000
         )
     
     #x_best, mu_best_scaled, sigma_best_scaled = extract_maximum_test(
@@ -142,6 +145,8 @@ if __name__ == "__main__":
     print("==============================")
     
     print(lengthscales, sigma_f)
+    #print(scaled_Y)
+    #print(scaled_sigma)
     # You may want to use hyperparams_record to extract the recorded hyperparameters every round. 
     #print(hyperparams_record)
 

@@ -7,6 +7,7 @@ from scipy.optimize import minimize
 import glob
 import time, os
 
+from numpy.linalg import LinAlgError
 
 # Parameter ranges
 # Many functions will use these ranges for scaling and descaling
@@ -175,10 +176,24 @@ def kernel_rbf_ard(X1, X2, lengthscales, sigma_f):
     K = sigma_f**2 * np.exp(-0.5 * dists)
     return K
 
+def kernel_matern32_ard(X1, X2, lengthscales, sigma_f):
+    # Matern 3/2: k(r) = sigma_f^2 * (1 + sqrt(3) r) * exp(-sqrt(3) r)
+    # where r = sqrt( sum(((x-x')/l)^2) )
+    X1 = np.atleast_2d(X1); X2 = np.atleast_2d(X2)
+    scaled = (X1[:, None, :] - X2[None, :, :]) / lengthscales
+    sqdist = np.sum(scaled**2, axis=2)
+    r = np.sqrt(np.maximum(sqdist, 0.0))
+    sqrt3 = np.sqrt(3.0)
+    K = sigma_f**2 * (1.0 + sqrt3 * r) * np.exp(-sqrt3 * r)
+    return K
+
+
+
+
 # ------------------------
 # Log Marginal Likelihood
 # ------------------------
-def log_marginal_likelihood(X_train, y_train, lengthscales, sigma_f, sigma_n):
+def log_marginal_likelihood_old(X_train, y_train, lengthscales, sigma_f, sigma_n):
     """
     Computes the log marginal likelihood of a Gaussian Process with ARD RBF kernel.
     X_train: (N_train, 4)
@@ -190,6 +205,7 @@ def log_marginal_likelihood(X_train, y_train, lengthscales, sigma_f, sigma_n):
     Returns: scalar log marginal likelihood
     """
     K = kernel_rbf_ard(X_train, X_train, lengthscales, sigma_f)
+    #K = kernel_matern32_ard(X_train, X_train, lengthscales, sigma_f)  # Alternative kernel
     K += np.diag(sigma_n**2)  # sigma_n is a vector
 
     # compute p = -1/2 y.T K^-1 y - 1/2 log|K| - n/2 log(2pi)
@@ -197,10 +213,51 @@ def log_marginal_likelihood(X_train, y_train, lengthscales, sigma_f, sigma_n):
 
     return lml
 
+
+
+def log_marginal_likelihood(X_train, y_train, lengthscales, sigma_f, sigma_n):
+    """
+    Numerically stable log marginal likelihood computed with Cholesky.
+    - X_train: (N, D) scaled inputs
+    - y_train: (N,) scaled targets
+    - lengthscales: (D,)
+    - sigma_f: scalar
+    - sigma_n: (N,) observation noise std (same units as y_train)
+    Returns scalar LML (float). If numerical failure occurs, returns -inf.
+    """
+    N = X_train.shape[0]
+    # Ensure numpy arrays, float dtype
+    lengthscales = np.asarray(lengthscales, dtype=float).ravel()
+    sigma_f = float(sigma_f)
+    sigma_n = np.asarray(sigma_n, dtype=float).ravel()
+
+    # Build K
+    K = kernel_rbf_ard(X_train, X_train, lengthscales, sigma_f)
+    #K = kernel_matern32_ard(X_train, X_train, lengthscales, sigma_f)  # Alternative kernel
+    # Add observation noise (heteroscedastic allowed)
+    K[np.diag_indices_from(K)] += sigma_n**2 + 1e-12  # small jitter
+
+    try:
+        L = np.linalg.cholesky(K)              # K = L L^T
+    except LinAlgError:
+        # Not PD: return very small LML so optimizer avoids this region
+        return -1e25
+
+    # Solve for alpha = K^{-1} y using Cholesky solves
+    # L v = y  -> v = solve(L, y)
+    v = np.linalg.solve(L, y_train)
+    alpha = np.linalg.solve(L.T, v)
+
+    # lml = -0.5 * y^T K^{-1} y - sum(log(diag(L))) - (N/2) log(2pi)
+    lml = -0.5 * float(y_train.T @ alpha) - np.sum(np.log(np.diag(L))) - 0.5 * N * np.log(2 * np.pi)
+    return float(lml)
+
+
+
 # ------------------------
 # GP Prediction
 # ------------------------
-def gp_predict(X_train, Y_train, X_test, lengthscales, sigma_f, sigma_n):
+def gp_predict_old(X_train, Y_train, X_test, lengthscales, sigma_f, sigma_n):
     """
     Predict mean and variance of the GP at test points X_test.
     
@@ -224,6 +281,7 @@ def gp_predict(X_train, Y_train, X_test, lengthscales, sigma_f, sigma_n):
 
     # 1. Compute kernel matrices
     K = kernel_rbf_ard(X_train, X_train, lengthscales, sigma_f)
+    #K = kernel_matern32_ard(X_train, X_train, lengthscales, sigma_f)  # Alternative kernel
     K += np.diag(sigma_n**2)  # Include noise
     K_s = kernel_rbf_ard(X_train, X_test, lengthscales, sigma_f)
     K_ss = kernel_rbf_ard(X_test, X_test, lengthscales, sigma_f)
@@ -246,10 +304,40 @@ def gp_predict(X_train, Y_train, X_test, lengthscales, sigma_f, sigma_n):
 
     return mu_star, sigma_star
 
+def gp_predict(X_train, Y_train, X_test, lengthscales, sigma_f, sigma_n):
+    X_train = np.asarray(X_train, dtype=float)
+    X_test  = np.asarray(X_test,  dtype=float)
+    Y_train = np.asarray(Y_train, dtype=float)
+    sigma_n = np.asarray(sigma_n, dtype=float).ravel()
+
+    # Kernel matrices
+    #K = kernel_matern32_ard(X_train, X_train, lengthscales, sigma_f)  # Alternative kernel
+    K = kernel_rbf_ard(X_train, X_train, lengthscales, sigma_f)
+    K[np.diag_indices_from(K)] += sigma_n**2 + 1e-12
+    K_s = kernel_rbf_ard(X_train, X_test, lengthscales, sigma_f)
+    #K_s = kernel_matern32_ard(X_train, X_test, lengthscales, sigma_f)  # Alternative kernel
+    K_ss = kernel_rbf_ard(X_test, X_test, lengthscales, sigma_f)
+    #K_ss = kernel_matern32_ard(X_test, X_test, lengthscales, sigma_f)  # Alternative kernel
+    # Cholesky
+    L = np.linalg.cholesky(K + 1e-12*np.eye(len(X_train)))
+
+    # alpha = K^{-1} y
+    alpha = np.linalg.solve(L.T, np.linalg.solve(L, Y_train))
+
+    mu_star = K_s.T @ alpha
+
+    # variance
+    v = np.linalg.solve(L, K_s)
+    var_star = np.maximum(np.diag(K_ss) - np.sum(v**2, axis=0), 0.0)
+    std_star = np.sqrt(var_star)
+
+    return mu_star, std_star
+
+
 # ------------------------
 # Hyperparameter Optimization
 # ------------------------
-def minimise_neg_lml(X_train, y_train, sigma_n, params0):
+def minimise_neg_lml_old(X_train, y_train, sigma_n, params0):
     """
     Optimise kernel hyperparameters by minimizing negative log marginal likelihood.
     This is basically Routine A in my notes.
@@ -277,6 +365,59 @@ def minimise_neg_lml(X_train, y_train, sigma_n, params0):
 
     lengthscales_opt = res.x[:4]
     sigma_f_opt = res.x[4]
+    return lengthscales_opt, sigma_f_opt
+
+def minimise_neg_lml(X_train, y_train, sigma_n, params0=None, optimize_log=True):
+    """
+    Robust hyperparameter optimisation. Returns (lengthscales, sigma_f).
+
+    - params0: initial guess. If None, defaults to [1,1,1,1, 1].
+    - optimize_log: if True, we optimize over log(params) to enforce positivity.
+    """
+    X_train = np.asarray(X_train, dtype=float)
+    y_train = np.asarray(y_train, dtype=float)
+    sigma_n = np.asarray(sigma_n, dtype=float)
+
+    if params0 is None:
+        params0 = np.ones(5, dtype=float)
+    else:
+        params0 = np.asarray(params0, dtype=float).ravel()
+        if params0.size != 5:
+            raise ValueError("params0 must have length 5 (4 lengthscales + sigma_f)")
+
+    if optimize_log:
+        x0 = np.log(params0)   # optimize in log-space
+        bounds = [(np.log(1e-8), np.log(1e2))]*5
+        def obj(log_params):
+            params = np.exp(log_params)
+            ls = params[:4]; sf = params[4]
+            lml = log_marginal_likelihood(X_train, y_train, ls, sf, sigma_n)
+            if not np.isfinite(lml):
+                return 1e25
+            return -lml
+    else:
+        x0 = params0
+        bounds = [(1e-8, 1e2)]*5
+        def obj(params):
+            ls = params[:4]; sf = params[4]
+            lml = log_marginal_likelihood(X_train, y_train, ls, sf, sigma_n)
+            if not np.isfinite(lml):
+                return 1e25
+            return -lml
+
+    res = minimize(obj, x0, bounds=bounds, method='L-BFGS-B', options={'maxiter':1000})
+
+    if not res.success:
+        # still accept result but warn
+        print("Warning: optimiser did not converge:", res.message)
+
+    if optimize_log:
+        opt_params = np.exp(res.x)
+    else:
+        opt_params = res.x
+
+    lengthscales_opt = opt_params[:4]
+    sigma_f_opt = opt_params[4]
     return lengthscales_opt, sigma_f_opt
 
 # -----------------------------------------------------
@@ -372,7 +513,19 @@ def scale_Y(Y, Y_err):
 
     Y_scaled = (Y - Y_mean) / Y_std
     sigma_n_scaled = Y_err / Y_std
+    sigma_n_scaled = np.clip(sigma_n_scaled, 0.01, 0.1)
+
     return Y_scaled, sigma_n_scaled, Y_mean, Y_std
+
+def scale_Y_with_stats(Y, Y_mean, Y_std):
+    '''
+    Scale Y using provided mean and std.
+    
+    Input: Y: (N,) array of target values
+    Output: Y_scaled: (N,) array of scaled target values
+    '''
+    Y_scaled = (Y - Y_mean) / Y_std
+    return Y_scaled
 
 def descale_Y(Y_scaled, Y_mean, Y_std): 
     '''
