@@ -123,8 +123,13 @@ if __name__ == "__main__":
     # 7. Extract the maximum predicted triple product
     # ----------------------------- 
     x_best, mu_best_scaled, sigma_best_scaled = extract_maximum(
-        scale_X(X_train), scale_Y(Y_train, sigma_n)[0], lengthscales, sigma_f, scale_Y(Y_train,sigma_n)[1], n_candidates=20000
+       scale_X(X_train), scale_Y(Y_train, sigma_n)[0], lengthscales, sigma_f, scale_Y(Y_train,sigma_n)[1], n_candidates=10000
         )
+    
+    #x_best, mu_best_scaled, sigma_best_scaled = extract_maximum_test(
+    #   scale_X(X_train), scale_Y(Y_train, sigma_n)[0], lengthscales, sigma_f, scale_Y(Y_train,sigma_n)[1], X_test=scale_X(X_train)
+    #    ) # Test, feed all training data X as candidates to check if the model is well-behaved
+    
     # Descale predicted mean and uncertainty
     Y_mean, Y_std = scale_Y(Y_train, sigma_n)[2], scale_Y(Y_train, sigma_n)[3]
     mu_best = descale_Y(mu_best_scaled, Y_mean, Y_std)
@@ -136,6 +141,7 @@ if __name__ == "__main__":
     print(f"Predicted uncertainty: {sigma_best:.3e}")
     print("==============================")
     
+    print(lengthscales, sigma_f)
     # You may want to use hyperparams_record to extract the recorded hyperparameters every round. 
     #print(hyperparams_record)
 

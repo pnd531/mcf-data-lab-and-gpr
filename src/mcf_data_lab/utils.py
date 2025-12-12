@@ -21,7 +21,8 @@ import time, os
 param_mins = np.array([0.5,0.5,0.5,0.1])
 param_maxs = np.array([40,5,4,1])
 
-
+#param_mins = np.array([9,4,3,0.8])
+#param_maxs = np.array([11,5,4,1])
 
 
 def list_subsections(dataset):
@@ -412,7 +413,28 @@ def extract_maximum(X_train, Y_train, lengthscales, sigma_f, sigma_n,
     x_best = descale_X(x_best_scaled)
     return x_best, mu[idx_best], sigma[idx_best]
 
+def extract_maximum_test(X_train, Y_train, lengthscales, sigma_f, sigma_n, X_test):
+    """
+    Finds the point in the input space that maximizes the GP posterior mean.
+    Note that X_train and Y_train should be scaled already.
 
+    Steps:
+    1. Scale candidates (because GP was trained on scaled inputs)
+    2. Predict mu(x) for all candidates
+    3. Return the candidate with largest predicted mu
+    """
+    # 1. Scale X_test
+    X_test_scaled = scale_X(X_test)
+
+    # 2. Predict
+    mu, sigma = gp_predict(X_train, Y_train,
+                           X_test_scaled, lengthscales, sigma_f, sigma_n)
+
+    # 3. Find maximum mean prediction
+    idx_best = np.argmax(mu)
+    x_best_scaled = X_test_scaled[idx_best]
+    x_best = descale_X(x_best_scaled)
+    return x_best, mu[idx_best], sigma[idx_best]
 
 # -------------------------------
 # Main GPR function (not used)
