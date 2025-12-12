@@ -59,5 +59,8 @@ Todo: test whether the restructured code works; train the model with several dat
 Stable version. Ready to run. I have fixed the file paths issue. Now, the main.py can safely import functions from utils.py. An initial data batch is tested and the model gives reasonable output (note that we do not expect the model to converge with only 20 randonly-drawn data points). 
 TODO: Train the model with more data points
 
+## V1.03
+The code proved to be incredibly buggy. I tried to fix a few bugs and add an alternative kernel. I also took all the shared data and added it to the initial data batch. The prediction given by the model is very bad. This is the end of MCF data lab. I will continue working on this. For now, I think the issue is that the physics is very nonlinear. In the L-H transition region, the 'true' function is very unsmooth. GPR doesn't work well with unsmooth functions. There are some ways to improve the behaviour such as using a kernel that is more tolerable with unsmooth functions and placing bounds in hyperparameters. Getting rid of noisy data points may also help. As a starting point, I will reduce the code to 1D version to investigate how GPR fits a 1D unsmooth function.
+
 ---
 
