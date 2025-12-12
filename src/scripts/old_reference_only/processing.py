@@ -50,7 +50,7 @@ left = 55
 right = 101
 n_runs = 9
 
-files = glob.glob("./data_tokamak/nbi_*.mat")
+files = glob.glob("./data/data_ml/data_batch_ini/nbi_*.mat")
 
 # --- 3. Sort files numerically ---
 files_sorted = sorted(files, key=get_index)
@@ -168,15 +168,15 @@ plt.ylabel('Triple Product (ne0*te0*taue)')
 plt.grid()
 
 
-dataset = scipy.io.loadmat("./data_tokamak/nbi_1_5.mat")
+#dataset = scipy.io.loadmat("./data/data_ml/data_batch_3/nbi_0_95_Williams.mat")
 
 #list_subsections(dataset)
 #list_indexes(dataset)
 #print(get_average(dataset, 50, 100, "ni0"))
-plt.figure()
-plt.plot(get_output_data(dataset, "modeh"))
-plt.title('Confinement Mode vs Time for NBI=1.5MW')
-plt.xlabel('Time (s)')
-plt.ylabel('Confinement Mode')
-plt.grid()
+#plt.figure()
+#plt.plot(get_output_data(dataset, "taue"))
+#plt.title('Confinement Mode vs Time for NBI=1.5MW')
+#plt.xlabel('Time (s)')
+#plt.ylabel('Confinement Mode')
+#plt.grid()
 plt.show()

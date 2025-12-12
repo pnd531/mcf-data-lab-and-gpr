@@ -1,0 +1,21 @@
+import sys
+import os
+# Add src directory to sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from mcf_data_lab.utils import *  # noqa: F403
+
+if __name__ == "__main__":
+    ##########################################
+    # MAIN LOOP FOR BAYESIAN OPTIMISATION
+    ##########################################  
+    ##########################################
+    # 1. Load initial batch
+    ##########################################
+    data = read_simulation_folder('./data/data_ml/data_batch_3',t_start=56, t_end=101)
+    X_train = data['X']
+    Y_train = data['triple']
+    sigma_n = data['triple_err']
+
+    print("The triple products is", Y_train)
+    print("X is", X_train)

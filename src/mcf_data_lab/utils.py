@@ -58,7 +58,7 @@ def get_input_parameter(dataset, index):
 # -----------------------------
 # MAIN LOADER
 # -----------------------------
-def read_simulation_folder(folder, t_start=55, t_end=101):
+def read_simulation_folder(folder, t_start=50, t_end=100):
     # Assume you have N mat files in the folder
     """
     Reads all METIS .mat files from a folder and returns:
@@ -70,7 +70,7 @@ def read_simulation_folder(folder, t_start=55, t_end=101):
 
     # Assume that you name the mat files as nbi_*.mat. It doesn't matter what the other parameters are in the filename, 
     # as long as you start with nbi_.
-    files = sorted(glob.glob(f"{folder}/nbi_*.mat"))
+    files = sorted(glob.glob(f"{folder}/*.mat"))
     N = len(files)
     # Raise error if no files found
     if N == 0:
@@ -313,7 +313,7 @@ def generate_candidates_lhs(N):
 # -----------------------------
 # Tell me where to sample next
 # -----------------------------
-def select_next_points(X_candidates, mu, sigma, n_points=10, kappa=2.0):
+def select_next_points(X_candidates, mu, sigma, n_points=10, kappa=1.5):
     """
     Select the next locations to sample based on UCB acquisition function.
     Instead of examining all possible locations, we consider only a set of candidate points.

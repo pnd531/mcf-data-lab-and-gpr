@@ -154,9 +154,9 @@ def read_simulation_folder(folder, t_start=55, t_end=101):
 
 # Example usage
 
-data = read_simulation_folder("./data_tokamak")
+data = read_simulation_folder("./data/data_ml/data_batch_ini", t_start=55, t_end=100)
 
-
+print(data["triple"])
 
 print(data["X"].shape)         # (N, 4)
 print(data["triple"].shape)    # (N,)
