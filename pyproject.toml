@@ -6,6 +6,7 @@ dependencies = [
         "numpy >= 2.3.0",
         "tomli",
 	"scipy",
+	"scikit-learn >= 1.8.0"
 ]
 
 [project.optional-dependencies]
