@@ -1,0 +1,15 @@
+[project]
+name = "gpr_example"
+version = "0.1.0"
+dependencies = [
+        "matplotlib >= 3.10.0",
+        "numpy >= 2.3.0",
+        "tomli",
+	"scipy",
+]
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+[project.scripts]
+
